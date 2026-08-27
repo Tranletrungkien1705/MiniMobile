@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>MiniMobile</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  body { background:#0b1020; min-height:100vh; display:flex; align-items:center; justify-content:center; font-family:"Be Vietnam Pro",sans-serif; padding:16px; }
+  .phone { width:390px; max-width:100%; height:760px; background:#f4f5fa; border-radius:34px; overflow:hidden; box-shadow:0 24px 70px rgba(0,0,0,.55); display:flex; flex-direction:column; position:relative; }
+  .statusbar { height:34px; background:#4f46e5; }
+  .hdr { background:#4f46e5; color:#fff; padding:6px 20px 20px; }
+  .scr { flex:1; overflow-y:auto; padding:16px; }
+  .tile { background:#fff; border-radius:16px; padding:14px; text-align:center; box-shadow:0 1px 4px rgba(2,6,23,.08); }
+  .tile i { font-size:24px; color:#4f46e5; }
+  .widget { background:#fff; border-radius:14px; padding:14px 16px; box-shadow:0 1px 4px rgba(2,6,23,.08); display:flex; align-items:center; gap:14px; }
+  .widget .ic { width:44px;height:44px;border-radius:12px;background:#eef0fe;display:flex;align-items:center;justify-content:center;color:#4f46e5;font-size:20px; }
+  .btn-p { background:#4f46e5;color:#fff;border:none;padding:11px;font-weight:600;border-radius:12px; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="statusbar d-flex align-items-center justify-content-between px-3"><span class="text-white small">9:41</span><span class="text-white"><i class="bi bi-reception-4"></i> <i class="bi bi-wifi"></i> <i class="bi bi-battery-full"></i></span></div>
+
+  <!-- LOGIN -->
+  <div id="login" class="scr">
+    <div class="text-center mt-4 mb-4">
+      <div style="width:72px;height:72px;border-radius:20px;background:#4f46e5;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:34px"><i class="bi bi-phone"></i></div>
+      <h4 class="fw-bold mt-3 mb-0">MiniMobile</h4>
+      <div class="text-muted small">Đăng nhập một lần bằng MiniSSO</div>
+    </div>
+    <div id="err" class="alert alert-danger py-2 small d-none"></div>
+    <div class="mb-3"><label class="form-label small text-muted">Email</label><input id="email" class="form-control" value="sales@minisso.dev" /></div>
+    <div class="mb-4"><label class="form-label small text-muted">Mật khẩu</label><input id="pw" type="password" class="form-control" value="Sales@123" /></div>
+    <button class="btn-p w-100" onclick="login()">Đăng nhập</button>
+    <div class="text-center text-muted small mt-3">Xác thực JWT qua <b>MiniSSO</b> (OIDC)</div>
+  </div>
+
+  <!-- HOME -->
+  <div id="home" class="d-none" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+    <div class="hdr">
+      <div class="d-flex justify-content-between align-items-center">
+        <div><div id="greet" class="fw-bold" style="font-size:17px"></div><div id="ten" class="small" style="opacity:.85"></div></div>
+        <i class="bi bi-box-arrow-right" style="cursor:pointer" onclick="logout()"></i>
+      </div>
+    </div>
+    <div class="scr">
+      <div id="widgets" class="d-grid gap-2 mb-3"></div>
+      <div class="fw-semibold mb-2 small text-muted">TIỆN ÍCH</div>
+      <div id="modules" class="row g-2"></div>
+      <div class="text-center text-muted mt-3" style="font-size:11px">Token JWT do MiniSSO cấp · BFF tổng hợp fleet</div>
+    </div>
+  </div>
+</div>
+<script>
+let token = null;
+async function login() {
+  const err = document.getElementById('err'); err.classList.add('d-none');
+  const r = await fetch('/api/auth/login', { method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ email: email.value, password: pw.value }) });
+  const d = await r.json();
+  if (!r.ok || !d.access_token) { err.textContent = 'Đăng nhập thất bại: ' + (d.error || 'lỗi'); err.classList.remove('d-none'); return; }
+  token = d.access_token;
+  await loadHome();
+  document.getElementById('login').classList.add('d-none');
+  document.getElementById('home').classList.remove('d-none');
+}
+async function loadHome() {
+  const h = { 'Authorization': 'Bearer ' + token };
+  const me = await (await fetch('/api/me', { headers: h })).json();
+  const home = await (await fetch('/api/home', { headers: h })).json();
+  document.getElementById('greet').textContent = home.greeting;
+  document.getElementById('ten').textContent = me.email + (home.tenant ? ' · ' + home.tenant : '');
+  document.getElementById('widgets').innerHTML = home.widgets.map(w =>
+    `<div class="widget"><div class="ic"><i class="bi bi-${w.icon}"></i></div><div class="flex-fill"><div class="text-muted" style="font-size:12px">${w.title}</div><div class="fw-bold" style="font-size:18px">${w.value} <span class="text-muted" style="font-size:12px;font-weight:400">${w.unit}</span> ${w.live?'<span class="badge bg-success" style="font-size:9px">LIVE</span>':''}</div></div></div>`).join('');
+  document.getElementById('modules').innerHTML = home.modules.map(m =>
+    `<div class="col-4"><a href="${m.url}" target="_blank" class="text-decoration-none"><div class="tile"><i class="bi bi-${m.icon}"></i><div class="small mt-1 text-dark">${m.name}</div></div></a></div>`).join('');
+}
+function logout() { token = null; document.getElementById('home').classList.add('d-none'); document.getElementById('login').classList.remove('d-none'); }
+</script>
+</body>
+</html>
