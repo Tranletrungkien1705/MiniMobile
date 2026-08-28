@@ -2,11 +2,15 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using MiniMobile.Services;
+using Serilog;
 
 // Giữ nguyên claim type như IdP phát ("role","name","email","sub") — không remap kiểu cũ.
 JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
 
+FleetObs.ConfigureLogger("minimobile");
 var builder = WebApplication.CreateBuilder(args);
+builder.Host.UseSerilog();
 builder.WebHost.UseUrls($"http://0.0.0.0:{Environment.GetEnvironmentVariable("PORT") ?? "8080"}");
 
 // Định danh: TIN token do MiniSSO cấp (OIDC). Authority → tự nạp discovery + JWKS để xác thực RS256.
@@ -26,8 +30,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 builder.Services.AddAuthorization();
 builder.Services.AddHttpClient();
+builder.Services.AddFleetObs();
 
 var app = builder.Build();
+app.UseFleetObs();
 app.UseDefaultFiles();
 app.UseStaticFiles();
 app.UseAuthentication();
