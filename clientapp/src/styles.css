@@ -1,0 +1,27 @@
+:root { --brand: #0b63d6; --brand-dk: #084ba3; --bg: #eef2f9; --ink: #1f2430; --muted: #6b7280; --card: #fff; --line: #e5e7eb; }
+* { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, 'Segoe UI', Roboto, sans-serif; background: #d9e2f0; color: var(--ink); }
+.phone { max-width: 430px; margin: 0 auto; min-height: 100vh; background: var(--bg); box-shadow: 0 0 40px rgba(0,0,0,.12); position: relative; overflow: hidden; }
+.topbar { background: linear-gradient(135deg, var(--brand), var(--brand-dk)); color: #fff; padding: 22px 20px 26px; }
+.topbar .greet { font-size: 20px; font-weight: 700; }
+.topbar .sub { opacity: .85; font-size: 13px; margin-top: 2px; }
+.body { padding: 16px; }
+.card { background: var(--card); border-radius: 14px; padding: 16px; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(0,0,0,.05); }
+.widgets { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: -18px; }
+.widget { background: #fff; border-radius: 14px; padding: 14px; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+.widget .v { font-size: 22px; font-weight: 700; }
+.widget .t { color: var(--muted); font-size: 12px; margin-top: 2px; }
+.widget .live { display: inline-block; width: 8px; height: 8px; border-radius: 4px; background: #16a34a; margin-left: 6px; }
+.modules { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.mod { background: #fff; border-radius: 14px; padding: 14px 6px; text-align: center; text-decoration: none; color: var(--ink); box-shadow: 0 2px 8px rgba(0,0,0,.05); }
+.mod .ic { font-size: 26px; }
+.mod .nm { font-size: 12px; margin-top: 6px; }
+.h { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 700; margin: 14px 4px 8px; }
+input { width: 100%; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; font-size: 15px; margin-bottom: 12px; }
+button { width: 100%; padding: 13px; border: none; border-radius: 10px; background: var(--brand); color: #fff; font-weight: 700; font-size: 15px; cursor: pointer; }
+button:hover { background: var(--brand-dk); }
+.login { padding: 60px 24px; }
+.login h1 { text-align: center; color: var(--brand); }
+.err { background: #fee2e2; color: #991b1b; padding: 10px 14px; border-radius: 10px; margin-bottom: 12px; font-size: 14px; }
+.logout { background: none; color: #fff; width: auto; padding: 4px 10px; font-size: 12px; border: 1px solid rgba(255,255,255,.4); border-radius: 8px; position: absolute; top: 20px; right: 16px; }
+.roles { margin-top: 8px; } .pill { display: inline-block; background: rgba(255,255,255,.2); padding: 2px 8px; border-radius: 6px; font-size: 11px; margin-right: 4px; }
