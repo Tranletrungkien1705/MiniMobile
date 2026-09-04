@@ -34,6 +34,7 @@ builder.Services.AddFleetObs();
 
 var app = builder.Build();
 app.UseFleetObs();
+FleetObs.ReportLicense(ssoAuthority, "minimobile");
 app.UseDefaultFiles();
 app.UseStaticFiles();
 app.UseAuthentication();
