@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Thẻ hội viên — MiniMobile</title>
+<!--
+  Port 1:1 màn "Thẻ hội viên" của 2019.3.HTC.TV.MobileApp.
+  Nguồn: ERP.HTCMobile.Web/Controllers/HTCReportController.cs:301-390 (GetMembershipCards)
+       → ERP.HTCMobile.Biz/HTCMobileTVO.cs:1107-1241 GetMembershipCards_New20190310 (BẢN LIVE).
+  Bảng kết quả hiện đủ 39 cột đang BẬT của Membership_GetMembershipCards.cs:12-52.
+  Hai cột AmountInThePeriod / SpentValueInThePeriod bị COMMENT ở nguồn (:18-19) nên
+  KHÔNG có ở đây — cố ý, không phải bỏ quên.
+-->
+<style>
+:root { --brand:#0b63d6; --brand-dk:#084ba3; --bg:#eef2f9; --ink:#1f2430; --muted:#6b7280; --card:#fff; --line:#e5e7eb; }
+* { box-sizing:border-box; }
+body { margin:0; font-family:system-ui,'Segoe UI',Roboto,sans-serif; background:#d9e2f0; color:var(--ink); }
+.phone { max-width:430px; margin:0 auto; min-height:100vh; background:var(--bg); box-shadow:0 0 40px rgba(0,0,0,.12); }
+.topbar { background:linear-gradient(135deg,var(--brand),var(--brand-dk)); color:#fff; padding:20px 18px 22px; }
+.topbar h1 { font-size:17px; margin:0; font-weight:700; }
+.topbar .src { opacity:.85; font-size:11px; margin-top:4px; font-family:ui-monospace,Consolas,monospace; }
+.topbar a { color:#fff; font-size:12px; text-decoration:none; opacity:.85; }
+.body { padding:14px; }
+.card { background:var(--card); border-radius:14px; padding:14px; margin-bottom:14px; box-shadow:0 2px 8px rgba(0,0,0,.05); }
+.h { font-size:12px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); font-weight:700; margin:0 0 10px; }
+label { display:block; font-size:12px; color:var(--muted); margin:8px 0 3px; }
+input { width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:9px; font-size:14px; }
+button { width:100%; padding:12px; border:none; border-radius:10px; background:var(--brand); color:#fff; font-weight:700; font-size:14px; cursor:pointer; margin-top:12px; }
+button:hover { background:var(--brand-dk); }
+.err { background:#fee2e2; color:#991b1b; padding:9px 12px; border-radius:9px; font-size:13px; margin-top:10px; word-break:break-word; }
+.ok { background:#dcfce7; color:#166534; padding:9px 12px; border-radius:9px; font-size:13px; margin-top:10px; }
+.tbl { overflow-x:auto; }
+table { border-collapse:collapse; font-size:12px; min-width:100%; }
+th,td { border:1px solid var(--line); padding:5px 7px; text-align:left; white-space:nowrap; }
+th { background:#f3f6fb; color:var(--muted); font-weight:700; }
+.cnt { font-size:12px; color:var(--muted); margin-top:8px; }
+.note { font-size:11px; color:var(--muted); margin-top:10px; line-height:1.5; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="topbar">
+    <h1>Thẻ hội viên (port 1:1 HTCReportController.cs — Crd_Card)</h1>
+    <div class="src">POST /api/HTCReport/GetMembershipCards</div>
+    <div style="margin-top:8px"><a href="/">&larr; Về trang chính</a></div>
+  </div>
+  <div class="body">
+
+    <div class="card">
+      <p class="h">Cổng giao dịch (Utils.cs:1763-1788)</p>
+      <label>GwUserCode</label><input id="gwu" value="HTC.TV.MobileApp.API" />
+      <label>GwPassword</label><input id="gwp" value="HTC.TV.MobileApp.API" />
+    </div>
+
+    <div class="card">
+      <p class="h">Điều kiện tra cứu</p>
+      <label>FromDate (lọc theo LogLUDTime của thẻ/hội viên — HTCMobileTVO.cs:937-938)</label>
+      <input id="fromDate" value="2026-01-01 00:00:00" />
+      <label>ToDate (rỗng ⇒ 2100-01-01 23:59:59)</label><input id="toDate" value="" />
+      <label>Count (0 ⇒ RecordCount_Max = 12345600)</label><input id="count" value="0" />
+      <button id="btnGet">Tra cứu</button>
+      <div id="msg"></div>
+      <div class="cnt" id="cnt"></div>
+      <div class="tbl"><table id="tbl"></table></div>
+      <p class="note">
+        Bẫy sinh đôi: controller gọi bản <b>_New20190310</b> (HTCReportController.cs:335),
+        bản đó đẩy sang WS iNOS nên KHÔNG chứa SQL. Điều kiện lọc + thứ tự sắp
+        (order by CardNo desc) lấy từ bản song sinh cục bộ HTCMobileTVO.cs:925-941 —
+        là bằng chứng gần nhất có trong repo, chưa phải bằng chứng của bản LIVE.
+      </p>
+    </div>
+
+  </div>
+</div>
+<script>
+// 39 cột đang BẬT của Membership_GetMembershipCards.cs:12-52 — đúng thứ tự nguồn.
+const COLS = ['MemberNo','CardNo','CardType','CardTypeName','CardSourceCode','PointsInThePeriod',
+  'TotalAmountMember','TotalSpentAmountMember','Balance','CustomerCode','CustomerName',
+  'CustomerIDCardNo','CustomerGender','DateOfBirth','CustomerMobile','CustomerAddress',
+  'ProvinceCode','ProvinceName','DistrictCode','DistrictName','PlateNo','VIN','TradeMarkCode',
+  'ModelCode','ModelName','EffDateStart','EffDateEnd','CardStatus','MemberStatus','DealerCode',
+  'CreateDateTime','LogLUDateTime','DeletionDateTime','Remark','DeletionStatus','RegistrationDate',
+  'PointPurchaseAddCar','PointBonus','QtyVisitAvail'];
+
+const $ = id => document.getElementById(id);
+
+$('btnGet').onclick = async () => {
+  const r = await fetch('/api/HTCReport/GetMembershipCards', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      GwUserCode: $('gwu').value, GwPassword: $('gwp').value,
+      FromDate: $('fromDate').value, ToDate: $('toDate').value, Count: Number($('count').value || 0)
+    })
+  });
+  const data = await r.json();
+  const t = $('tbl'); t.innerHTML = '';
+  if (data.message !== '0') { $('msg').innerHTML = '<div class="err">' + data.message + '</div>'; $('cnt').textContent = ''; return; }
+  $('msg').innerHTML = '<div class="ok">Message = 0</div>';
+  const p = data.membershipCards;   // payload mang tên "MembershipCards" — ApiControllerBase.cs:88-95
+  $('cnt').textContent = 'ItemCount = ' + p.itemCount + ' (MySummaryTable.MyCount — tổng TRƯỚC khi cắt trang, controller:366), số dòng trả về = ' + p.items.length;
+  t.insertAdjacentHTML('beforeend', '<tr>' + COLS.map(c => '<th>' + c + '</th>').join('') + '</tr>');
+  for (const row of p.items) {
+    const lower = {}; for (const k in row) lower[k.toLowerCase()] = row[k];
+    t.insertAdjacentHTML('beforeend', '<tr>' + COLS.map(c => {
+      const v = lower[c.toLowerCase()];
+      return '<td>' + (v === null || v === undefined || v === '' ? '—' : String(v)) + '</td>';
+    }).join('') + '</tr>');
+  }
+};
+</script>
+</body>
+</html>

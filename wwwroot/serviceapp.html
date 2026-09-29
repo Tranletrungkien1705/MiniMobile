@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Đặt hẹn dịch vụ — MiniMobile</title>
+<!--
+  Port 1:1 màn "Đặt hẹn dịch vụ" của 2019.3.HTC.TV.MobileApp.
+  Nguồn: ERP.HTCMobile.Web/Controllers/AppointmentServiceController.cs
+         - CreateServiceApp  :24-120
+         - ServiceApp_Get    :122-214
+  Ô nhập của phần tạo hẹn đúng 12 trường của CreateServiceAppInput.cs:12-23.
+  Bảng kết quả hiện đủ 18 cột của DMSSV_GetServiceApp.cs:11-28 (kể cả cột rỗng)
+  để đối chiếu cột được bằng máy, không phải suy từ ảnh chụp.
+-->
+<style>
+:root { --brand:#0b63d6; --brand-dk:#084ba3; --bg:#eef2f9; --ink:#1f2430; --muted:#6b7280; --card:#fff; --line:#e5e7eb; }
+* { box-sizing:border-box; }
+body { margin:0; font-family:system-ui,'Segoe UI',Roboto,sans-serif; background:#d9e2f0; color:var(--ink); }
+.phone { max-width:430px; margin:0 auto; min-height:100vh; background:var(--bg); box-shadow:0 0 40px rgba(0,0,0,.12); }
+.topbar { background:linear-gradient(135deg,var(--brand),var(--brand-dk)); color:#fff; padding:20px 18px 22px; }
+.topbar h1 { font-size:17px; margin:0; font-weight:700; }
+.topbar .src { opacity:.85; font-size:11px; margin-top:4px; font-family:ui-monospace,Consolas,monospace; }
+.topbar a { color:#fff; font-size:12px; text-decoration:none; opacity:.85; }
+.body { padding:14px; }
+.card { background:var(--card); border-radius:14px; padding:14px; margin-bottom:14px; box-shadow:0 2px 8px rgba(0,0,0,.05); }
+.h { font-size:12px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); font-weight:700; margin:0 0 10px; }
+label { display:block; font-size:12px; color:var(--muted); margin:8px 0 3px; }
+input { width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:9px; font-size:14px; }
+button { width:100%; padding:12px; border:none; border-radius:10px; background:var(--brand); color:#fff; font-weight:700; font-size:14px; cursor:pointer; margin-top:12px; }
+button:hover { background:var(--brand-dk); }
+.err { background:#fee2e2; color:#991b1b; padding:9px 12px; border-radius:9px; font-size:13px; margin-top:10px; word-break:break-word; }
+.ok { background:#dcfce7; color:#166534; padding:9px 12px; border-radius:9px; font-size:13px; margin-top:10px; }
+.tbl { overflow-x:auto; }
+table { border-collapse:collapse; font-size:12px; min-width:100%; }
+th,td { border:1px solid var(--line); padding:5px 7px; text-align:left; white-space:nowrap; }
+th { background:#f3f6fb; color:var(--muted); font-weight:700; }
+.cnt { font-size:12px; color:var(--muted); margin-top:8px; }
+.note { font-size:11px; color:var(--muted); margin-top:10px; line-height:1.5; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="topbar">
+    <h1>Đặt hẹn dịch vụ (port 1:1 AppointmentServiceController.cs — Ser_App)</h1>
+    <div class="src">POST /api/AppointmentService/CreateServiceApp · POST /api/AppointmentService/ServiceApp_Get</div>
+    <div style="margin-top:8px"><a href="/">&larr; Về trang chính</a></div>
+  </div>
+  <div class="body">
+
+    <div class="card">
+      <p class="h">Cổng giao dịch (bắt buộc — Utils.cs:1763-1788)</p>
+      <label>GwUserCode</label><input id="gwu" value="HTC.TV.MobileApp.API" />
+      <label>GwPassword</label><input id="gwp" value="HTC.TV.MobileApp.API" />
+      <div class="cnt">Tên đăng nhập so KHÔNG phân biệt hoa/thường, mật khẩu so CÓ phân biệt — đúng như nguồn.</div>
+    </div>
+
+    <div class="card">
+      <p class="h">Tra cứu phiếu hẹn (ServiceApp_Get)</p>
+      <label>FromDate</label><input id="fromDate" value="2026-01-01 00:00:00" />
+      <label>ToDate (để rỗng ⇒ nguồn tự thay 2100-01-01 23:59:59)</label><input id="toDate" value="" />
+      <label>Count (0 ⇒ nguồn thay bằng RecordCount_Max = 12345600)</label><input id="count" value="0" />
+      <button id="btnGet">Tra cứu</button>
+      <div id="getMsg"></div>
+      <div class="cnt" id="getCnt"></div>
+      <div class="tbl"><table id="tblApp"></table></div>
+      <p class="note">
+        Câu SQL thật (2021.1.TCMotor/Dev/DMSCarSv/V20/TERP.BizCarSv/BizCarSv.TVO.cs:1006)
+        chỉ lấy phiếu có <b>AppStatus = '2' (Xác nhận)</b>, lọc theo LogLUDateTime (:1007-1008).
+        Phiếu vừa tạo mang AppStatus = '1' (:2408) nên <b>CHƯA hiện ở đây</b> — đúng hành vi
+        nguồn, không phải lỗi. Kho mẫu cố ý để 1 phiếu ở trạng thái '1' để thấy guard này.
+      </p>
+    </div>
+
+    <div class="card">
+      <p class="h">Tạo phiếu hẹn (CreateServiceApp — 12 trường của nguồn)</p>
+      <label>strCustomerName</label><input id="f_strCustomerName" value="Nguyễn Văn Đức" />
+      <label>strCustomerMobile</label><input id="f_strCustomerMobile" value="0911222333" />
+      <label>strCustomerIDCardNo</label><input id="f_strCustomerIDCardNo" value="001090044556" />
+      <label>strCustomerAddress</label><input id="f_strCustomerAddress" value="Số 7 Lê Đại Hành, Hai Bà Trưng" />
+      <label>strPlateNo</label><input id="f_strPlateNo" value="30F-456.78" />
+      <label>strTradeMarkCode</label><input id="f_strTradeMarkCode" value="HYUNDAI" />
+      <label>strModelCode</label><input id="f_strModelCode" value="ELANTRA" />
+      <label>strAppDateTime</label><input id="f_strAppDateTime" value="2026-10-05 10:00:00" />
+      <label>strAppTime</label><input id="f_strAppTime" value="10:00" />
+      <label>strCusRequest</label><input id="f_strCusRequest" value="Bảo dưỡng 20.000 km" />
+      <label>strCVDVCode</label><input id="f_strCVDVCode" value="CVDV001" />
+      <label>strDealerCode</label><input id="f_strDealerCode" value="HTC.HN01" />
+      <button id="btnCreate">Tạo hẹn</button>
+      <div id="createMsg"></div>
+    </div>
+
+  </div>
+</div>
+<script>
+// 18 cột của DMSSV_GetServiceApp.cs:11-28 — liệt kê tường minh, đúng THỨ TỰ nguồn.
+const COLS = ['CustomerCode','CustomerName','CustomerMobile','CustomerIDCardNo','PlateNo','VIN',
+  'TradeMarkCode','ModelCode','ModelName','AppDateTime','AppTime','CusRequest','DealerCode',
+  'AppCode','AppNo','CVDVName','CreateDateTime','LogLUDTime'];
+
+const $ = id => document.getElementById(id);
+const gw = () => ({ GwUserCode: $('gwu').value, GwPassword: $('gwp').value });
+
+async function post(url, body) {
+  const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  return r.json();
+}
+
+// Nguồn luôn trả HTTP 200; thành công khi Message === "0" (ApiControllerBase.cs:42).
+function show(el, data, okText) {
+  if (data.message !== '0') { el.innerHTML = '<div class="err">' + data.message + '</div>'; return false; }
+  el.innerHTML = '<div class="ok">' + okText + '</div>';
+  return true;
+}
+
+$('btnGet').onclick = async () => {
+  const data = await post('/api/AppointmentService/ServiceApp_Get', Object.assign(gw(), {
+    FromDate: $('fromDate').value, ToDate: $('toDate').value, Count: Number($('count').value || 0)
+  }));
+  const t = $('tblApp'); t.innerHTML = '';
+  if (!show($('getMsg'), data, 'Message = 0')) { $('getCnt').textContent = ''; return; }
+  const p = data.customers;   // payload mang tên "Customers" — ApiControllerBase.cs:37-44
+  $('getCnt').textContent = 'ItemCount = ' + p.itemCount + ' (tổng TRƯỚC khi cắt trang — controller:189), số dòng trả về = ' + p.items.length;
+  t.insertAdjacentHTML('beforeend', '<tr>' + COLS.map(c => '<th>' + c + '</th>').join('') + '</tr>');
+  for (const row of p.items) {
+    const lower = {}; for (const k in row) lower[k.toLowerCase()] = row[k];
+    t.insertAdjacentHTML('beforeend', '<tr>' + COLS.map(c => {
+      const v = lower[c.toLowerCase()];
+      return '<td>' + (v === null || v === undefined || v === '' ? '—' : String(v)) + '</td>';
+    }).join('') + '</tr>');
+  }
+};
+
+$('btnCreate').onclick = async () => {
+  const body = gw();
+  for (const f of ['strCustomerName','strCustomerMobile','strCustomerIDCardNo','strCustomerAddress',
+    'strPlateNo','strTradeMarkCode','strModelCode','strAppDateTime','strAppTime','strCusRequest',
+    'strCVDVCode','strDealerCode']) body[f] = $('f_' + f).value;
+  const data = await post('/api/AppointmentService/CreateServiceApp', body);
+  if (show($('createMsg'), data, 'Đã tạo hẹn — AppNo = ' + (data.createServiceApp && data.createServiceApp.appNo))) $('btnGet').click();
+};
+</script>
+</body>
+</html>

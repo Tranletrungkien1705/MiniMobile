@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Nhắc bảo dưỡng — MiniMobile</title>
+<!--
+  Port 1:1 màn "Nhắc bảo dưỡng" của 2019.3.HTC.TV.MobileApp.
+  Nguồn: ERP.HTCMobile.Web/Controllers/HTCReportController.cs:207-297 (GetServiceReminders)
+       → ERP.HTCMobile.Biz/HTCMobileTVO.cs:297-420.
+  Bảng kết quả hiện đủ 14 cột của DMSSV_GetServiceReminders.cs:11-24.
+  Ô nhập đúng 2 trường của GetServiceRemindersInput.cs:11-12 — MỘT mốc "Date",
+  KHÔNG phải cặp From/To như hai màn còn lại.
+-->
+<style>
+:root { --brand:#0b63d6; --brand-dk:#084ba3; --bg:#eef2f9; --ink:#1f2430; --muted:#6b7280; --card:#fff; --line:#e5e7eb; }
+* { box-sizing:border-box; }
+body { margin:0; font-family:system-ui,'Segoe UI',Roboto,sans-serif; background:#d9e2f0; color:var(--ink); }
+.phone { max-width:430px; margin:0 auto; min-height:100vh; background:var(--bg); box-shadow:0 0 40px rgba(0,0,0,.12); }
+.topbar { background:linear-gradient(135deg,var(--brand),var(--brand-dk)); color:#fff; padding:20px 18px 22px; }
+.topbar h1 { font-size:17px; margin:0; font-weight:700; }
+.topbar .src { opacity:.85; font-size:11px; margin-top:4px; font-family:ui-monospace,Consolas,monospace; }
+.topbar a { color:#fff; font-size:12px; text-decoration:none; opacity:.85; }
+.body { padding:14px; }
+.card { background:var(--card); border-radius:14px; padding:14px; margin-bottom:14px; box-shadow:0 2px 8px rgba(0,0,0,.05); }
+.h { font-size:12px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); font-weight:700; margin:0 0 10px; }
+label { display:block; font-size:12px; color:var(--muted); margin:8px 0 3px; }
+input { width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:9px; font-size:14px; }
+button { width:100%; padding:12px; border:none; border-radius:10px; background:var(--brand); color:#fff; font-weight:700; font-size:14px; cursor:pointer; margin-top:12px; }
+button:hover { background:var(--brand-dk); }
+.err { background:#fee2e2; color:#991b1b; padding:9px 12px; border-radius:9px; font-size:13px; margin-top:10px; word-break:break-word; }
+.ok { background:#dcfce7; color:#166534; padding:9px 12px; border-radius:9px; font-size:13px; margin-top:10px; }
+.tbl { overflow-x:auto; }
+table { border-collapse:collapse; font-size:12px; min-width:100%; }
+th,td { border:1px solid var(--line); padding:5px 7px; text-align:left; white-space:nowrap; }
+th { background:#f3f6fb; color:var(--muted); font-weight:700; }
+.cnt { font-size:12px; color:var(--muted); margin-top:8px; }
+.note { font-size:11px; color:var(--muted); margin-top:10px; line-height:1.5; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="topbar">
+    <h1>Nhắc bảo dưỡng (port 1:1 HTCReportController.cs — Ser_RO)</h1>
+    <div class="src">POST /api/HTCReport/GetServiceReminders</div>
+    <div style="margin-top:8px"><a href="/">&larr; Về trang chính</a></div>
+  </div>
+  <div class="body">
+
+    <div class="card">
+      <p class="h">Cổng giao dịch (Utils.cs:1763-1788)</p>
+      <label>GwUserCode</label><input id="gwu" value="HTC.TV.MobileApp.API" />
+      <label>GwPassword</label><input id="gwp" value="HTC.TV.MobileApp.API" />
+    </div>
+
+    <div class="card">
+      <p class="h">Điều kiện tra cứu</p>
+      <label>Date (nguồn chỉ có MỘT mốc — GetServiceRemindersInput.cs:11)</label>
+      <input id="date" value="2026-09-29 23:59:59" />
+      <label>Count (0 ⇒ RecordCount_Max = 12345600)</label><input id="count" value="0" />
+      <button id="btnGet">Tra cứu</button>
+      <div id="msg"></div>
+      <div class="cnt" id="cnt"></div>
+      <div class="tbl"><table id="tbl"></table></div>
+      <p class="note">
+        ItemCount của màn này = SỐ DÒNG ĐÃ TRẢ, không phải MySummaryTable.MyCount:
+        dòng dùng MyCount bị comment ở nguồn (HTCReportController.cs:273). Hai màn
+        Ser_App và Crd_Card thì ngược lại — dùng MyCount (tổng trước khi cắt trang).
+      </p>
+    </div>
+
+  </div>
+</div>
+<script>
+// 14 cột của DMSSV_GetServiceReminders.cs:11-24 — đúng thứ tự nguồn.
+const COLS = ['ROID','RONo','CustomerCode','CustomerName','CustomerMobile','CustomerIDCardNo',
+  'CarID','PlateNo','VIN','TradeMarkCode','ModelCode','ModelName','ReminderMaintanceDate','DealerCode'];
+
+const $ = id => document.getElementById(id);
+
+$('btnGet').onclick = async () => {
+  const r = await fetch('/api/HTCReport/GetServiceReminders', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      GwUserCode: $('gwu').value, GwPassword: $('gwp').value,
+      Date: $('date').value, Count: Number($('count').value || 0)
+    })
+  });
+  const data = await r.json();
+  const t = $('tbl'); t.innerHTML = '';
+  // Nguồn luôn HTTP 200; lỗi nằm trong Message (ApiControllerBase.cs:702-743).
+  if (data.message !== '0') { $('msg').innerHTML = '<div class="err">' + data.message + '</div>'; $('cnt').textContent = ''; return; }
+  $('msg').innerHTML = '<div class="ok">Message = 0</div>';
+  const p = data.serviceReminders;   // payload mang tên "ServiceReminders" — ApiControllerBase.cs:63-70
+  $('cnt').textContent = 'ItemCount = ' + p.itemCount + ' (= số dòng trả về, theo controller:273)';
+  t.insertAdjacentHTML('beforeend', '<tr>' + COLS.map(c => '<th>' + c + '</th>').join('') + '</tr>');
+  for (const row of p.items) {
+    const lower = {}; for (const k in row) lower[k.toLowerCase()] = row[k];
+    t.insertAdjacentHTML('beforeend', '<tr>' + COLS.map(c => {
+      const v = lower[c.toLowerCase()];
+      return '<td>' + (v === null || v === undefined || v === '' ? '—' : String(v)) + '</td>';
+    }).join('') + '</tr>');
+  }
+};
+</script>
+</body>
+</html>
